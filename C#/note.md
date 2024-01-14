@@ -85,7 +85,7 @@
 
 
 
-
+***
 
 
 
@@ -111,11 +111,13 @@
 
   * 由于**入口点具有唯一性**，因此使用顶级语句这种方式作为入口点的话，那么<b style="color:red">包含顶级语句的文件也必须有且只有一个</b>,否则当存在多个顶级文件时会报<u>*错误*</u>`CS802: 只有一个编译单元可具有顶级语句`
 
-  * 在使用了顶级语句这种方式作为入口点后，**可以存在`Main`方法，但自动会忽略使用`Main`作为入口点的选择，编译器会发生如下<u>*警告*</u>`CS7022: 程序的入口点是全局代码; 忽略"Main()"入口点`，特别得禁止强制在编译器选项中来选择入口点**
+  * 在使用了顶级语句这种方式作为入口点后，**可以存在`Main`方法，但自动会忽略使用`Main`作为入口点的选择，且编译器会发生如下<u>*警告*</u>`CS7022: 程序的入口点是全局代码; 忽略"Main()"入口点`，特别得禁止强制在编译器选项中来选择入口点**
 
   * `using`语句是处于位置最上方的，随后才接着顶级语句，顶级语句后面还可以跟命名空间和类型定义
 
-    ![](img/CShap5.png)
+    ![](img/CSharp5.png)
+  
+  * 可以使用`args`变量来引用输入的任何命令行参数（**`args`变量永远不会为`null`，但其`Length`可能为0**）
 
 
 
@@ -126,6 +128,8 @@
 //TODO: 未实践
 
 
+
+***
 
 
 
@@ -159,17 +163,122 @@
 
 ## 数据类型
 
+* `c#`的数据类型分为两种
+
+  * <b style="color:green">值类型</b>：**其变量直接包含它们的数据，每个变量都有自己的数据副本，因此，对一个变量的执行运算不会影响到另一个变量(`ref`和`out`参数变量除外)**
+
+    ```C#
+    using System;
+    //官方示例
+    public struct MutablePoint
+    {
+        public int X;
+        public int Y;
+    
+        public MutablePoint(int x, int y) => (X, Y) = (x, y);
+    
+        public override string ToString() => $"({X}, {Y})";
+    }
+    public class Program
+    {
+        public static void Main()
+        {
+            var p1 = new MutablePoint(1, 2);
+            var p2 = p1;
+            p2.Y = 200;
+            Console.WriteLine($"{nameof(p1)} after {nameof(p2)} is modified: {p1}");
+            Console.WriteLine($"{nameof(p2)}: {p2}");
+            MutateAndDisplay(p2);
+            Console.WriteLine($"{nameof(p2)} after passing to a method: {p2}");
+        }
+        private static void MutateAndDisplay(MutablePoint p)
+        {
+            p.X = 100;
+            Console.WriteLine($"Point mutated in a method: {p}");
+        }
+    }
+    // Expected output:
+    // p1 after p2 is modified: (1, 2)
+    // p2: (1, 200)
+    // Point mutated in a method: (100, 200)
+    // p2 after passing to a method: (1, 200)
+    ```
+
+    
+
+  * <b style="color:green">引用类型</b>：**其变量存储的是对应数据所占内存地址的引用**。
+
+* 下图是官方给出的继承链关系图
+
+  ![](img/CSharp7-value-reference-types-common-type-system.png)
+
+
+
+
+
+***
+
 ### - 值类型
 
-//TODO:贴图
+* 值类型派生自`System.ValueTypes（派生自System.Ojbect）`
+* **值类型变量直接包含其值**，并且<b style="color:red">对于值类型变量，没有单独的堆分配或垃圾回收开销</b>
+* 实际上值类型可以根据其**定义的方式**来分成两类
+  * `struct`：格式为 `struct S {...}` 
+  * `enum`：`enum E {...}` 
 
-// 描述有符号和五符合的区别 （以byte为例，还得画图）
+* 官方对`C#`的值类型的进一步划分是分为：简单类型，枚举类型，结构类型，可以为`null`值得值类型和元组值类型
+
+
+
+***
+
+#### · 简单类型
+
+* 这个简单类型也叫**内置值类型**，相当于`C#`内部已经提前定义好的值类型，如下图所示
+
+  ![](img/CSharp8-内置值类型.png)
+
+* 特别要提一点的是`C#`对于整型又把它分成了有符号整型和无符号整型
+
+   * <b style="color:blue">有符号整型和无符号整型区别在于存储区域的首位二进制码是否表示正负</b>.，因此它们两个能够存储的数值区间范围也是不一样的
+  
+   * 以`byte`为例，`byte`占一个字节大小，也就是8位
+  
+   * 对于`byte`，其最大值为：
+
+     ![](img/CSharp9-byte最大值原理.png)
+   
+   * 对于`sbyte`，其最大值为
+   
+     ![](img/CSharp10-sbyte最大值原理.png)
+   
+     
+
+
 
 // sizeof()方法获取某个类型所占字节数（例子）
 
 
 
+#### · 枚举类型
 
+
+
+
+
+#### · 结构类型
+
+
+
+
+
+#### · 可以为`null`的值类型
+
+
+
+
+
+#### · 元组值类型???
 
 
 
@@ -177,7 +286,9 @@
 
 ### - 引用类型
 
+* 创建类型的对象后，其**变量仅保留对相应内存的引用**，若将对象引用分配给新变量后，新变量会引用原始对象。通过一个变量所做的更改将会反映在另外一个变量中，因为它们引用相同的数据。
 
+  ![](img/CSharp6-引用类型内存地址示意.png)
 
 
 
@@ -239,14 +350,14 @@
 
 
 
-![](img/CSharp1.png)
+
 
 # 暂时疑问
 
 * 无符号整型`ulong`,`uint`,`ushort`,那为啥最后有一个不叫`ubyte`
 * 动态类型具体使用环境
-
 * string和String区别
-
 * C#中接口和抽象类的区别
 * 元组具体使用环境
+* sync  await????
+* ![](img/1.png)
